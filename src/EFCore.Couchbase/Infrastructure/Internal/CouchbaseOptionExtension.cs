@@ -1,24 +1,21 @@
 ﻿//
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
 using System.Text;
-using JetBrains.Annotations;
+using Couchbase.Authentication;
+using Couchbase.Configuration.Client;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.EntityFrameworkCore.Couchbase.Infrastructure.Internal
 {
     public class CouchbaseOptionsExtension : IDbContextOptionsExtension
     {
-        private string _serviceEndPoint;
-        private string _authKeyOrResourceToken;
-        private string _databaseName;
-        private Func<ExecutionStrategyDependencies, IExecutionStrategy> _executionStrategyFactory;
+        private ClientConfiguration _clientConfiguration;
+        private IAuthenticator _authenticator;
+        private string _bucketName;
         private string _logFragment;
-        private string _region;
 
         public CouchbaseOptionsExtension()
         {
@@ -26,75 +23,40 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Infrastructure.Internal
 
         protected CouchbaseOptionsExtension(CouchbaseOptionsExtension copyFrom)
         {
-            _serviceEndPoint = copyFrom._serviceEndPoint;
-            _authKeyOrResourceToken = copyFrom._authKeyOrResourceToken;
-            _databaseName = copyFrom._databaseName;
-            _executionStrategyFactory = copyFrom._executionStrategyFactory;
-            _region = copyFrom._region;
+            _clientConfiguration = copyFrom.ClientConfiguration;
+            _authenticator = copyFrom.Authenticator;
+            _bucketName = copyFrom.BucketName;
         }
 
-        public virtual string ServiceEndPoint => _serviceEndPoint;
+        public virtual ClientConfiguration ClientConfiguration => _clientConfiguration;
 
-        public virtual CouchbaseOptionsExtension WithServiceEndPoint(string serviceEndPoint)
+        public virtual CouchbaseOptionsExtension WithClientConfiguration(ClientConfiguration clientConfiguration)
         {
             var clone = Clone();
 
-            clone._serviceEndPoint = serviceEndPoint;
+            clone._clientConfiguration = clientConfiguration;
 
             return clone;
         }
 
-        public virtual string AuthKeyOrResourceToken => _authKeyOrResourceToken;
+        public virtual IAuthenticator Authenticator => _authenticator;
 
-        public virtual CouchbaseOptionsExtension WithAuthKeyOrResourceToken(string authKeyOrResourceToken)
+        public virtual CouchbaseOptionsExtension WithAuthenticator(IAuthenticator authenticator)
         {
             var clone = Clone();
 
-            clone._authKeyOrResourceToken = authKeyOrResourceToken;
+            clone._authenticator = authenticator;
 
             return clone;
         }
 
-        public virtual string DatabaseName => _databaseName;
+        public virtual string BucketName => _bucketName;
 
-        public virtual CouchbaseOptionsExtension WithDatabaseName(string database)
+        public virtual CouchbaseOptionsExtension WithBucketName(string bucketName)
         {
             var clone = Clone();
 
-            clone._databaseName = database;
-
-            return clone;
-        }
-
-        public virtual string Region => _region;
-
-        public virtual CouchbaseOptionsExtension WithRegion(string region)
-        {
-            var clone = Clone();
-
-            clone._region = region;
-
-            return clone;
-        }
-
-        /// <summary>
-        ///     A factory for creating the default <see cref="IExecutionStrategy" />, or <c>null</c> if none has been
-        ///     configured.
-        /// </summary>
-        public virtual Func<ExecutionStrategyDependencies, IExecutionStrategy> ExecutionStrategyFactory => _executionStrategyFactory;
-
-        /// <summary>
-        ///     Creates a new instance with all options the same as for this instance, but with the given option changed.
-        ///     It is unusual to call this method directly. Instead use <see cref="DbContextOptionsBuilder" />.
-        /// </summary>
-        /// <param name="executionStrategyFactory"> The option to change. </param>
-        /// <returns> A new instance with the option changed. </returns>
-        public virtual CouchbaseOptionsExtension WithExecutionStrategyFactory(
-            [CanBeNull] Func<ExecutionStrategyDependencies, IExecutionStrategy> executionStrategyFactory)
-        {
-            var clone = Clone();
-
-            clone._executionStrategyFactory = executionStrategyFactory;
+            clone._bucketName = bucketName;
 
             return clone;
         }
@@ -130,9 +92,11 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Infrastructure.Internal
                 {
                     var builder = new StringBuilder();
 
-                    builder.Append("ServiceEndPoint=").Append(_serviceEndPoint).Append(' ');
+                    builder.Append("ClientConfiguration=").Append("TODO?").Append(' ');
 
-                    builder.Append("Database=").Append(_databaseName).Append(' ');
+                    builder.Append("Authenticator=").Append("TODO?").Append(' ');
+
+                    builder.Append("BucketName=").Append(_bucketName).Append(' ');
 
                     _logFragment = builder.ToString();
                 }

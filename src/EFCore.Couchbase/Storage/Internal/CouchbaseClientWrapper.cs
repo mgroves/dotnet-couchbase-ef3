@@ -10,6 +10,10 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Couchbase;
+using Couchbase.Authentication;
+using Couchbase.Configuration.Client;
+using Couchbase.Core;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Couchbase.Infrastructure.Internal;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -23,15 +27,16 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
 {
     public class CouchbaseClientWrapper : IDisposable
     {
-        private readonly string _databaseId;
-        private readonly string _endPoint;
-        private readonly string _authKey;
         private readonly IExecutionStrategyFactory _executionStrategyFactory;
         private readonly IDiagnosticsLogger<DbLoggerCategory.Database.Command> _commandLogger;
 
         private static readonly string _userAgent = " Microsoft.EntityFrameworkCore.Couchbase/" + ProductInfo.GetVersion();
         public static readonly JsonSerializer Serializer = new JsonSerializer();
-        private string _region;
+        private ClientConfiguration _clientConfiguration;
+        private IAuthenticator _authenticator;
+        private string _bucketName;
+        private IBucket _bucket;
+        private Cluster _cluster;
 
         static CouchbaseClientWrapper()
         {
@@ -46,34 +51,33 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
         {
             var options = dbContextOptions.FindExtension<CouchbaseOptionsExtension>();
 
-            _databaseId = options.DatabaseName;
-            _endPoint = options.ServiceEndPoint;
-            _authKey = options.AuthKeyOrResourceToken;
-            _region = options.Region;
+            _clientConfiguration = options.ClientConfiguration;
+            _authenticator = options.Authenticator;
+            _bucketName = options.BucketName;
+
             _executionStrategyFactory = executionStrategyFactory;
             _commandLogger = commandLogger;
         }
 
-        // private CouchbaseClient Client =>
-        //     _client
-        //     ?? (_client = new CouchbaseClient(
-        //         BuildCouchbaseConfiguration()));
-        //
-        // private CouchbaseConfiguration BuildCouchbaseConfiguration()
-        // {
-        //     var configuration = new CouchbaseConfiguration(_endPoint, _authKey)
-        //     {
-        //         UserAgentSuffix = _userAgent,
-        //         ConnectionMode = ConnectionMode.Direct
-        //     };
-        //
-        //     if (_region != null)
-        //     {
-        //         configuration = configuration.UseCurrentRegion(_region);
-        //     }
-        //
-        //     return configuration;
-        // }
+        private IBucket Bucket =>
+            _bucket
+            ?? (_bucket = ConnectToCouchbaseBucket());
+
+        private Cluster Cluster =>
+            _cluster
+            ?? (_cluster = ConnectToCouchbaseCluster());
+
+        private Cluster ConnectToCouchbaseCluster()
+        {
+            var cluster = new Cluster(_clientConfiguration);
+            cluster.Authenticate(_authenticator);
+            return cluster;
+        }
+
+        private IBucket ConnectToCouchbaseBucket()
+        {
+            return Cluster.OpenBucket(_bucketName);
+        }
 
         public bool CreateDatabaseIfNotExists()
             => _executionStrategyFactory.Create().Execute(
@@ -180,21 +184,13 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             (string ContainerId, JToken Document) parameters,
             CancellationToken cancellationToken = default)
         {
-            return await Task.FromException<bool>(new NotImplementedException("CouchbaseClientWrapper::CreateItemOnceAsync"));
+            var id = parameters.Document["id"].ToString();
+            var document = parameters.Document;
+            // document["id"].Remove();
 
-            // using (var stream = new MemoryStream())
-            // using (var writer = new StreamWriter(stream, new UTF8Encoding(), bufferSize: 1024, leaveOpen: false))
-            // using (var jsonWriter = new JsonTextWriter(writer))
-            // {
-            //     JsonSerializer.Create().Serialize(jsonWriter, parameters.Document);
-            //     await jsonWriter.FlushAsync();
-            //
-            //     var items = Client.Databases[_databaseId].Containers[parameters.ContainerId].Items;
-            //     using (var response = await items.CreateItemStreamAsync("0", stream, new CouchbaseItemRequestOptions(), cancellationToken))
-            //     {
-            //         return response.StatusCode == HttpStatusCode.Created;
-            //     }
-            // }
+            var result = await Bucket.InsertAsync(id, document);
+
+            return result.Success;
         }
 
         public bool ReplaceItem(
@@ -541,7 +537,9 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             }
         }
 
-//        public void Dispose() => _client?.Dispose();
-        public void Dispose() => throw new NotImplementedException("CouchbaseClientWrapper::Dispose");
+        public void Dispose()
+        {
+            _cluster.Dispose();
+        }
     }
 }

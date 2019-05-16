@@ -158,7 +158,6 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             {
                 case EntityState.Added:
                     var newDocument = documentSource.CreateDocument(entry);
-                    newDocument["__partitionKey"] = "0";
                     return _CouchbaseClient.CreateItem(collectionId, newDocument);
                 case EntityState.Modified:
                     var jObjectProperty = entityType.FindProperty(StoreKeyConvention.JObjectPropertyName);
@@ -175,7 +174,6 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                     else
                     {
                         document = documentSource.CreateDocument(entry);
-                        document["__partitionKey"] = "0";
 
                         document[entityType.Couchbase().DiscriminatorProperty.Couchbase().PropertyName] =
                             JToken.FromObject(entityType.Couchbase().DiscriminatorValue, CouchbaseClientWrapper.Serializer);
@@ -214,7 +212,6 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             {
                 case EntityState.Added:
                     var newDocument = documentSource.CreateDocument(entry);
-                    newDocument["__partitionKey"] = "0";
                     return _CouchbaseClient.CreateItemAsync(collectionId, newDocument, cancellationToken);
                 case EntityState.Modified:
                     var jObjectProperty = entityType.FindProperty(StoreKeyConvention.JObjectPropertyName);
@@ -231,7 +228,6 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                     else
                     {
                         document = documentSource.CreateDocument(entry);
-                        document["__partitionKey"] = "0";
 
                         document[entityType.Couchbase().DiscriminatorProperty.Couchbase().PropertyName] =
                             JToken.FromObject(entityType.Couchbase().DiscriminatorValue, CouchbaseClientWrapper.Serializer);

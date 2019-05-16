@@ -32,7 +32,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .TryAdd<LoggingDefinitions, CouchbaseLoggingDefinitions>()
                 .TryAdd<IDatabaseProvider, DatabaseProvider<CouchbaseOptionsExtension>>()
                 .TryAdd<IDatabase, CouchbaseDatabaseWrapper>()
-                .TryAdd<IExecutionStrategyFactory, CouchbaseExecutionStrategyFactory>()
+//                .TryAdd<IExecutionStrategyFactory, CouchbaseExecutionStrategyFactory>()
                 .TryAdd<IDbContextTransactionManager, CouchbaseTransactionManager>()
                 .TryAdd<IModelCustomizer, CouchbaseModelCustomizer>()
                 .TryAdd<IProviderConventionSetBuilder, CouchbaseConventionSetBuilder>()

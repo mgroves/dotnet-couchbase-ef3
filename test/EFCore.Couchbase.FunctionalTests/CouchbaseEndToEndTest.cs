@@ -385,33 +385,33 @@ namespace Microsoft.EntityFrameworkCore.Couchbase
         //     }
         // }
 
-        [ConditionalFact]
-        public void Should_throw_if_specified_region_is_wrong()
-        {
-            var regionName = "FakeRegion";
-
-            Action a = () =>
-            {
-                using (var testDatabase = CouchbaseTestStore.CreateInitialized(DatabaseName, o => o.Region(regionName)))
-                {
-                    var options = Fixture.CreateOptions(testDatabase);
-
-                    var customer = new Customer {Id = 42, Name = "Theon"};
-
-                    using (var context = new CustomerContext(options))
-                    {
-                        context.Database.EnsureCreated();
-
-                        context.Add(customer);
-
-                        context.SaveChanges();
-                    }
-                }
-            };
-
-            var ex = Assert.Throws<ArgumentException>(a);
-            Assert.Equal("Current location is not a valid Azure region.", ex.Message);
-        }
+        // [ConditionalFact]
+        // public void Should_throw_if_specified_region_is_wrong()
+        // {
+        //     var regionName = "FakeRegion";
+        //
+        //     Action a = () =>
+        //     {
+        //         using (var testDatabase = CouchbaseTestStore.CreateInitialized(DatabaseName, o => o.Region(regionName)))
+        //         {
+        //             var options = Fixture.CreateOptions(testDatabase);
+        //
+        //             var customer = new Customer {Id = 42, Name = "Theon"};
+        //
+        //             using (var context = new CustomerContext(options))
+        //             {
+        //                 context.Database.EnsureCreated();
+        //
+        //                 context.Add(customer);
+        //
+        //                 context.SaveChanges();
+        //             }
+        //         }
+        //     };
+        //
+        //     var ex = Assert.Throws<ArgumentException>(a);
+        //     Assert.Equal("Current location is not a valid Azure region.", ex.Message);
+        // }
 
         [ConditionalFact]
         public async Task Can_add_update_delete_end_to_end_with_conflicting_id()

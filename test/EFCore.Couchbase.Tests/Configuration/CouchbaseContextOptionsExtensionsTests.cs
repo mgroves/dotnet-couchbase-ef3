@@ -21,23 +21,23 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Configuration
         //     Assert.Equal(regionName, extension.Region);
         // }
 
-        /// <summary>
-        /// The region will be checked by the Couchbase sdk, because the region list is not constant
-        /// </summary>
-        [Fact]
-        public void Can_create_options_with_wrong_region()
-        {
-            var regionName = "FakeRegion";
-            var options = new DbContextOptionsBuilder().UseCouchbase(
-                "serviceEndPoint",
-                "authKeyOrResourceToken",
-                "databaseName",
-                o => { o.Region(regionName); });
-
-            var extension = options
-                .Options.FindExtension<CouchbaseOptionsExtension>();
-
-            Assert.Equal(regionName, extension.Region);
-        }
+        // /// <summary>
+        // /// The region will be checked by the Couchbase sdk, because the region list is not constant
+        // /// </summary>
+        // [Fact]
+        // public void Can_create_options_with_wrong_region()
+        // {
+        //     var regionName = "FakeRegion";
+        //     var options = new DbContextOptionsBuilder().UseCouchbase(
+        //         "serviceEndPoint",
+        //         "authKeyOrResourceToken",
+        //         "databaseName",
+        //         o => { o.Region(regionName); });
+        //
+        //     var extension = options
+        //         .Options.FindExtension<CouchbaseOptionsExtension>();
+        //
+        //     Assert.Equal(regionName, extension.Region);
+        // }
     }
 }

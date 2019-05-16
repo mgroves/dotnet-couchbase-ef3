@@ -107,14 +107,14 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                 _name = testStore.Name;
             }
 
-            protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            {
-                optionsBuilder
-                    .UseCouchbase(
-                        _connectionUri,
-                        _authToken,
-                        _name);
-            }
+            // protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+            // {
+            //     optionsBuilder
+            //         .UseCouchbase(
+            //             _connectionUri,
+            //             _authToken,
+            //             _name);
+            // }
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {

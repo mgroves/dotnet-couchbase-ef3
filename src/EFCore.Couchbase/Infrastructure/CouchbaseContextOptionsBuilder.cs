@@ -23,21 +23,6 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Infrastructure
         protected virtual DbContextOptionsBuilder OptionsBuilder { get; }
 
         /// <summary>
-        ///     Configures the context to use the provided <see cref="IExecutionStrategy" />.
-        /// </summary>
-        /// <param name="getExecutionStrategy"> A function that returns a new instance of an execution strategy. </param>
-        public virtual CouchbaseContextOptionsBuilder ExecutionStrategy(
-            [NotNull] Func<ExecutionStrategyDependencies, IExecutionStrategy> getExecutionStrategy)
-            => WithOption(e => e.WithExecutionStrategyFactory(Check.NotNull(getExecutionStrategy, nameof(getExecutionStrategy))));
-
-        /// <summary>
-        /// Configures the context to use the provided Region.
-        /// </summary>
-        /// <param name="region">Couchbase region name</param>
-        public virtual CouchbaseContextOptionsBuilder Region(string region)
-            => WithOption(e => e.WithRegion(Check.NotNull(region, nameof(region))));
-
-        /// <summary>
         ///     Sets an option by cloning the extension used to store the settings. This ensures the builder
         ///     does not modify options that are already in use elsewhere.
         /// </summary>

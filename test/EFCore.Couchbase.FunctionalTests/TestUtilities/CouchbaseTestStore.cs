@@ -17,7 +17,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
 {
     public class CouchbaseTestStore : TestStore
     {
-        private readonly TestStoreContext _storeContext;
+//        private readonly TestStoreContext _storeContext;
         private readonly string _dataFilePath;
 
         public static CouchbaseTestStore Create(string name, Action<CouchbaseContextOptionsBuilder> extensionConfiguration = null) => new CouchbaseTestStore(name, shared: false, extensionConfiguration: extensionConfiguration);
@@ -36,7 +36,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
             ConnectionUri = TestEnvironment.DefaultConnection;
             AuthToken = TestEnvironment.AuthToken;
 
-            _storeContext = new TestStoreContext(this, extensionConfiguration);
+            //_storeContext = new TestStoreContext(this, extensionConfiguration);
 
             if (dataFilePath != null)
             {
@@ -49,17 +49,17 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
         public string ConnectionUri { get; }
         public string AuthToken { get; }
 
-        public override DbContextOptionsBuilder AddProviderOptions(DbContextOptionsBuilder builder)
-            => builder.UseCouchbase(
-                ConnectionUri,
-                AuthToken,
-                Name);
+        // public override DbContextOptionsBuilder AddProviderOptions(DbContextOptionsBuilder builder)
+        //     => builder.UseCouchbase(
+        //         ConnectionUri,
+        //         AuthToken,
+        //         Name);
 
         protected override void Initialize(Func<DbContext> createContext, Action<DbContext> seed)
         {
             if (_dataFilePath == null)
             {
-                base.Initialize(createContext ?? (() => _storeContext), seed);
+                //base.Initialize(createContext ?? (() => _storeContext), seed);
             }
             else
             {
@@ -68,6 +68,11 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
                     CreateFromFile(context).GetAwaiter().GetResult();
                 }
             }
+        }
+
+        public override DbContextOptionsBuilder AddProviderOptions(DbContextOptionsBuilder builder)
+        {
+            throw new NotImplementedException();
         }
 
         private async Task CreateFromFile(DbContext context)
@@ -140,30 +145,30 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
         {
             if (_dataFilePath == null)
             {
-                _storeContext.Database.EnsureDeleted();
+             //   _storeContext.Database.EnsureDeleted();
             }
 
-            _storeContext.Dispose();
+            //_storeContext.Dispose();
             base.Dispose();
         }
 
-        private class TestStoreContext : DbContext
-        {
-            private readonly CouchbaseTestStore _testStore;
-            private readonly Action<CouchbaseContextOptionsBuilder> _extensionConfiguration;
-
-            public TestStoreContext(CouchbaseTestStore testStore,
-                Action<CouchbaseContextOptionsBuilder> extensionConfiguration)
-            {
-                _testStore = testStore;
-                _extensionConfiguration = extensionConfiguration;
-            }
-
-            protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            {
-                var extensionConfiguration = _extensionConfiguration ?? (_ => { });
-                optionsBuilder.UseCouchbase(_testStore.ConnectionUri, _testStore.AuthToken, _testStore.Name, extensionConfiguration);
-            }
-        }
+        // private class TestStoreContext : DbContext
+        // {
+        //     private readonly CouchbaseTestStore _testStore;
+        //     private readonly Action<CouchbaseContextOptionsBuilder> _extensionConfiguration;
+        //
+        //     public TestStoreContext(CouchbaseTestStore testStore,
+        //         Action<CouchbaseContextOptionsBuilder> extensionConfiguration)
+        //     {
+        //         _testStore = testStore;
+        //         _extensionConfiguration = extensionConfiguration;
+        //     }
+        //
+        //     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //     {
+        //         var extensionConfiguration = _extensionConfiguration ?? (_ => { });
+        //         optionsBuilder.UseCouchbase(_testStore.ConnectionUri, _testStore.AuthToken, _testStore.Name, extensionConfiguration);
+        //     }
+        // }
     }
 }

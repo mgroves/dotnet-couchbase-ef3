@@ -32,6 +32,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EFCore.InMemory.FunctionalT
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EFCore.InMemory", "src\EFCore.InMemory\EFCore.InMemory.csproj", "{9BEC2C40-F694-42B5-BFA4-BEB7C0BC63CD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCore.Couchbase.Example", "src\EFCore.Couchbase.Example\EFCore.Couchbase.Example.csproj", "{8780E7CF-9649-4E8A-BC36-6A2B9C2928C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -82,6 +84,10 @@ Global
 		{9BEC2C40-F694-42B5-BFA4-BEB7C0BC63CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BEC2C40-F694-42B5-BFA4-BEB7C0BC63CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BEC2C40-F694-42B5-BFA4-BEB7C0BC63CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8780E7CF-9649-4E8A-BC36-6A2B9C2928C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8780E7CF-9649-4E8A-BC36-6A2B9C2928C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8780E7CF-9649-4E8A-BC36-6A2B9C2928C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8780E7CF-9649-4E8A-BC36-6A2B9C2928C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -98,6 +104,7 @@ Global
 		{DA67497F-45F1-49B6-AB29-A3F6B5C1D709} = {02887729-B5B3-455D-B4E8-1483872A6666}
 		{B2180D3A-ED78-46E8-83B7-ADF9746F53DA} = {02887729-B5B3-455D-B4E8-1483872A6666}
 		{9BEC2C40-F694-42B5-BFA4-BEB7C0BC63CD} = {712F6813-A5CD-40D4-836F-F9667A3AE762}
+		{8780E7CF-9649-4E8A-BC36-6A2B9C2928C8} = {712F6813-A5CD-40D4-836F-F9667A3AE762}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C6093E2F-390D-4F97-8F1A-E5DF79153AA6}

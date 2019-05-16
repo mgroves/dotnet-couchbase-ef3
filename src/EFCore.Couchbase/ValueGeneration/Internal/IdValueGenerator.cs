@@ -19,26 +19,15 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.ValueGeneration.Internal
             var builder = new StringBuilder();
 
             var pk = entry.Metadata.FindPrimaryKey();
-            var discriminator = entry.Metadata.Couchbase().DiscriminatorValue;
-            if (discriminator != null
-                && !pk.Properties.Contains(entry.Metadata.Couchbase().DiscriminatorProperty))
-            {
-                AppendString(builder,discriminator);
-                builder.Append("|");
-            }
 
             foreach (var property in pk.Properties)
             {
-                if (property.Name == "__partitionKey")
-                {
-                    continue;
-                }
-
                 AppendString(builder, entry.Property(property.Name).CurrentValue);
-                builder.Append("|");
+                builder.Append("::");
             }
 
-            builder.Remove(builder.Length - 1, 1);
+            // remove any trailing delimeter
+            builder.Remove(builder.Length - 2, 2);
 
             return builder.ToString();
         }
