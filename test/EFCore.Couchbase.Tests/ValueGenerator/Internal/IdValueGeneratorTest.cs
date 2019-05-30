@@ -10,6 +10,23 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.ValueGenerator.Internal
     public class IdValueGeneratorTest
     {
         [Fact]
+        public void Generated_id_includes_values_of_all_keys_delimited()
+        {
+            // arrange
+            var modelBuilder = CouchbaseTestHelpers.Instance.CreateConventionBuilder();
+            modelBuilder.Entity<Blog>().HasKey(p => new { p.OtherId, p.Id });
+            var model = modelBuilder.FinalizeModel();
+            var blogIdProperty = model.FindEntityType(typeof(Blog)).FindProperty("id");
+
+            // act
+            var key = (string)CouchbaseTestHelpers.Instance.CreateInternalEntry(model, EntityState.Added, new Blog { Id = 123, OtherId = 456 })[blogIdProperty];
+
+            // assert
+            Assert.Equal(key, "456::123");
+            Assert.Equal(key, "Blog::456::123");
+        }
+
+        [Fact]
         public void Generated_ids_do_not_clash()
         {
             var modelBuilder = CouchbaseTestHelpers.Instance.CreateConventionBuilder();

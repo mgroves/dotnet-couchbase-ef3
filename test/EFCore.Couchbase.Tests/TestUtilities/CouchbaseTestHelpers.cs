@@ -21,10 +21,10 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
 
         protected override void UseProviderOptions(DbContextOptionsBuilder optionsBuilder)
         {
-            // optionsBuilder.UseCouchbase(
-            //     TestEnvironment.DefaultConnection,
-            //     TestEnvironment.AuthToken,
-            //     "UnitTests");
+            optionsBuilder.UseCouchbase(
+                TestEnvironment.ClientConfiguration,
+                TestEnvironment.Authenticator,
+                "eftest");
         }
     }
 }

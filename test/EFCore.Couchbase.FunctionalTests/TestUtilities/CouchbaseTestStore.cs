@@ -33,8 +33,8 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
         private CouchbaseTestStore(string name, bool shared = true, string dataFilePath = null, Action<CouchbaseContextOptionsBuilder> extensionConfiguration = null)
             : base(name, shared)
         {
-            ConnectionUri = TestEnvironment.DefaultConnection;
-            AuthToken = TestEnvironment.AuthToken;
+            // ConnectionUri = TestEnvironment.DefaultConnection;
+            // AuthToken = TestEnvironment.AuthToken;
 
             //_storeContext = new TestStoreContext(this, extensionConfiguration);
 

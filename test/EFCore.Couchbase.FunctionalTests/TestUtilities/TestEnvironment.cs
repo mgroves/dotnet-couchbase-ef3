@@ -1,7 +1,12 @@
 ﻿//
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Couchbase.Authentication;
+using Couchbase.Configuration.Client;
 using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
@@ -19,11 +24,28 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
                 .AddEnvironmentVariables();
 
             Config = configBuilder.Build()
-                .GetSection("Test:Couchbase:Sql");
+                .GetSection("Test:Couchbase");
         }
 
-        public static string DefaultConnection => Config["DefaultConnection"];
+        public static ClientConfiguration ClientConfiguration
+        {
+            get
+            {
+                return new ClientConfiguration
+                {
+                    Servers = new List<Uri> { new Uri(Config["Server"]) }
+                };
+            }
+        }
 
-        public static string AuthToken => Config["AuthToken"];
+        public static IAuthenticator Authenticator
+        {
+            get
+            {
+                var username = Config["Username"];
+                var password = Config["Password"];
+                return new PasswordAuthenticator(username, password);
+            }
+        }
     }
 }
