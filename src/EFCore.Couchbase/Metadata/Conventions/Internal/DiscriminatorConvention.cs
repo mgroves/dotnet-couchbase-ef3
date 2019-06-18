@@ -47,7 +47,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Metadata.Conventions.Internal
 
         private static void ConfigureDiscriminator(InternalEntityTypeBuilder entityTypeBuilder)
         {
-            var propertyBuilder = entityTypeBuilder.Property("Discriminator", typeof(string), ConfigurationSource.Convention);
+            var propertyBuilder = entityTypeBuilder.Property("Type", typeof(string), ConfigurationSource.Convention);
             propertyBuilder.IsRequired(true, ConfigurationSource.Convention);
             propertyBuilder.AfterSave(PropertySaveBehavior.Throw, ConfigurationSource.Convention);
             propertyBuilder.HasValueGenerator(

@@ -113,7 +113,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
                                                             var document = serializer.Deserialize<JObject>(reader);
 
                                                             document["id"] = $"{entityName}|{document["id"]}";
-                                                            document["Discriminator"] = entityName;
+                                                            document["Type"] = entityName;
                                                             document["__partitionKey"] = "0";
 
                                                             await CouchbaseClient.CreateItemAsync("NorthwindContext", document);

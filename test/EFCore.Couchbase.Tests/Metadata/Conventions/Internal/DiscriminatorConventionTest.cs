@@ -19,7 +19,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Metadata.Conventions.Internal
             var discriminatorProperty = entityTypeBuilder.Metadata.Couchbase().DiscriminatorProperty;
 
             Assert.NotNull(discriminatorProperty);
-            Assert.Equal("Discriminator", discriminatorProperty.Name);
+            Assert.Equal("Type", discriminatorProperty.Name);
             Assert.Equal(typeof(string), discriminatorProperty.ClrType);
             Assert.Equal(typeof(Entity).Name, entityTypeBuilder.Metadata.Couchbase().DiscriminatorValue);
         }
