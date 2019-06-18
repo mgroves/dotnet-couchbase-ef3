@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -186,7 +187,13 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
         {
             var id = parameters.Document["id"].ToString();
             var document = parameters.Document;
-            // document["id"].Remove();
+
+            var documentHasIdField = document["id"] != null;
+            if (documentHasIdField)
+            {
+                var idelement = document["id"].Parent;
+                idelement.Remove();
+            }
 
             var result = await Bucket.InsertAsync(id, document);
 

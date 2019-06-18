@@ -42,7 +42,14 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Update.Internal
                 var storeName = property.Couchbase().PropertyName;
                 if (storeName.Length != 0)
                 {
-                    document[storeName] = ConvertPropertyValue(property, entry.GetCurrentValue(property));
+                    // store the "id" value in the document
+                    // but don't store any object properties that contain the key value(s)
+                    var propertyIsAKey = property.IsKey();
+                    var propertyIsMarkedWithKeyAttribute = propertyIsAKey && storeName != "id";
+                    if (!propertyIsAKey || !propertyIsMarkedWithKeyAttribute)
+                    {
+                        document[storeName] = ConvertPropertyValue(property, entry.GetCurrentValue(property));
+                    }
                 }
             }
 
