@@ -20,3 +20,14 @@ To run a complete build on command line only, execute `build.cmd` or `build.sh` 
 This will execute only the part of the build script that downloads and initializes a few required build tools and packages.
 
 See [developer documentation](https://github.com/aspnet/EntityFrameworkCore/wiki/Getting-and-Building-the-Code) for more details.
+
+## Contributor's Guide
+
+The remaining work is currently divided among two GitHub projects.
+
+* The first project is called ["Low Hanging Fruit"](https://github.com/mgroves/dotnet-couchbase-ef3/projects/1) and these represent relatively easy/small/isolated pieces of work.
+* The second project is called ["Linq"](https://github.com/mgroves/dotnet-couchbase-ef3/projects/2) and it is strictly for tasks that are related to making EFCore 3 Couchbase Linq work.
+
+If you see or can describe some piece of work that needs to be added, please create an issue and assign it to one of the above Projects.
+
+If you would like to or are already working on an issue, please leave a comment in the issue! Note that a comment is not considered to be a promise of delivery, so don't let someone else's comment deter you from ALSO working on it if you want to!
