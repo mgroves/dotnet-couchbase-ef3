@@ -225,21 +225,9 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             (string ContainerId, string ItemId, JObject Document) parameters,
             CancellationToken cancellationToken = default)
         {
-            return await Task.FromException<bool>(new NotImplementedException("CouchbaseClientWrapper::ReplaceItemOnceAsync"));
+            var result = await _bucket.ReplaceAsync(parameters.ItemId, parameters.Document);
 
-            // using (var stream = new MemoryStream())
-            // using (var writer = new StreamWriter(stream, new UTF8Encoding(), bufferSize: 1024, leaveOpen: false))
-            // using (var jsonWriter = new JsonTextWriter(writer))
-            // {
-            //     JsonSerializer.Create().Serialize(jsonWriter, parameters.Document);
-            //     await jsonWriter.FlushAsync();
-            //
-            //     var items = Client.Databases[_databaseId].Containers[parameters.ContainerId].Items;
-            //     using (var response = await items.ReplaceItemStreamAsync("0", parameters.ItemId, stream, null, cancellationToken))
-            //     {
-            //         return response.StatusCode == HttpStatusCode.OK;
-            //     }
-            // }
+            return result.Success;
         }
 
         public bool DeleteItem(
