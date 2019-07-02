@@ -265,13 +265,10 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             (string ContainerId, string DocumentId) parameters,
             CancellationToken cancellationToken = default)
         {
-            return await Task.FromException<bool>(new NotImplementedException("CouchbaseClientWrapper::DeleteItemOnceAsync"));
 
-            // var items = Client.Databases[_databaseId].Containers[parameters.ContainerId].Items;
-            // using (var response = await items.DeleteItemStreamAsync("0", parameters.DocumentId, null, cancellationToken))
-            // {
-            //     return response.StatusCode == HttpStatusCode.NoContent;
-            // }
+            var result = await _bucket.RemoveAsync(parameters.DocumentId);
+
+            return result.Success;
         }
 
         public IEnumerable<JObject> ExecuteSqlQuery(
