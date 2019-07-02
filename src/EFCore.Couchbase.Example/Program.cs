@@ -47,13 +47,16 @@ namespace EFCore.Couchbase.Example
         {
             var context = new MyContext();
 
-            context.Blogs.Add(new Blog
-            {
-                BlogId = Path.GetRandomFileName(),
-                Url = "https://crosscuttingconcerns.com",
-                Timestamp = DateTime.Now
-            });
+            var id = Path.GetRandomFileName();
 
+            var blog = new Blog
+            {
+                BlogId = id, Url = "https://crosscuttingconcerns.com", Timestamp = DateTime.Now
+            };
+            context.Blogs.Add(blog);
+            context.SaveChanges();
+
+            context.Remove(blog);
             context.SaveChanges();
 
             context.Dispose();
