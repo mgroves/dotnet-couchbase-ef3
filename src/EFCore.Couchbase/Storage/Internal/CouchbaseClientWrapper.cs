@@ -186,8 +186,16 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             CancellationToken cancellationToken = default)
         {
             var id = parameters.Document["id"].ToString();
-            var document = parameters.Document;
 
+            var document = StripIdFromDocument(parameters.Document);
+
+            var result = await Bucket.InsertAsync(id, document);
+
+            return result.Success;
+        }
+
+        private static JToken StripIdFromDocument(JToken document)
+        {
             var documentHasIdField = document["id"] != null;
             if (documentHasIdField)
             {
@@ -195,9 +203,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                 idelement.Remove();
             }
 
-            var result = await Bucket.InsertAsync(id, document);
-
-            return result.Success;
+            return document;
         }
 
         public bool ReplaceItem(
@@ -225,7 +231,9 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             (string ContainerId, string ItemId, JObject Document) parameters,
             CancellationToken cancellationToken = default)
         {
-            var result = await _bucket.ReplaceAsync(parameters.ItemId, parameters.Document);
+            var document = StripIdFromDocument(parameters.Document);
+
+            var result = await _bucket.ReplaceAsync(parameters.ItemId, document);
 
             return result.Success;
         }
