@@ -23,7 +23,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Expressions.Internal
 
         public override string ToString()
         {
-            return $"{_outerExpression}[\"{PropertyBase.Name}\"]";
+            return $"{_outerExpression}.{PropertyBase.Name}";
         }
     }
 }
