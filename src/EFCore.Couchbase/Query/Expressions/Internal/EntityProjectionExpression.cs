@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore.Couchbase.Metadata.Conventions.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Expressions.Internal
@@ -24,7 +25,9 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Expressions.Internal
 
         public override string ToString()
         {
-            return IsEntityProjection ? _alias : "";
+            return IsEntityProjection
+                ? $"OBJECT_ADD({_alias}, '{StoreKeyConvention.IdPropertyName}', META({_alias}).id) AS {_alias}"
+                : "";
         }
     }
 }
