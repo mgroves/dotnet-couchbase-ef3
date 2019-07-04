@@ -49,11 +49,11 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
         public string ConnectionUri { get; }
         public string AuthToken { get; }
 
-        // public override DbContextOptionsBuilder AddProviderOptions(DbContextOptionsBuilder builder)
-        //     => builder.UseCouchbase(
-        //         ConnectionUri,
-        //         AuthToken,
-        //         Name);
+        public override DbContextOptionsBuilder AddProviderOptions(DbContextOptionsBuilder builder)
+             => builder.UseCouchbase(
+                 TestEnvironment.ClientConfiguration,
+                 TestEnvironment.Authenticator,
+                 "eftest");
 
         protected override void Initialize(Func<DbContext> createContext, Action<DbContext> seed)
         {
@@ -68,11 +68,6 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.TestUtilities
                     CreateFromFile(context).GetAwaiter().GetResult();
                 }
             }
-        }
-
-        public override DbContextOptionsBuilder AddProviderOptions(DbContextOptionsBuilder builder)
-        {
-            throw new NotImplementedException();
         }
 
         private async Task CreateFromFile(DbContext context)

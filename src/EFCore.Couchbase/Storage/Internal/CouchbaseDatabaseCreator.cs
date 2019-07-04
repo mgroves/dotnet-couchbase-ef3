@@ -32,10 +32,10 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
         public bool EnsureCreated()
         {
             var created = _CouchbaseClient.CreateDatabaseIfNotExists();
-            foreach (var entityType in _model.GetEntityTypes())
-            {
-                created |= _CouchbaseClient.CreateContainerIfNotExists(entityType.Couchbase().ContainerName, "__partitionKey");
-            }
+            // foreach (var entityType in _model.GetEntityTypes())
+            // {
+            //     created |= _CouchbaseClient.CreateContainerIfNotExists(entityType.Couchbase().ContainerName, "__partitionKey");
+            // }
 
             if (created)
             {
@@ -58,10 +58,10 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
         public async Task<bool> EnsureCreatedAsync(CancellationToken cancellationToken = default)
         {
             var created = await _CouchbaseClient.CreateDatabaseIfNotExistsAsync(cancellationToken);
-            foreach (var entityType in _model.GetEntityTypes())
-            {
-                created |= await _CouchbaseClient.CreateContainerIfNotExistsAsync(entityType.Couchbase().ContainerName, "__partitionKey", cancellationToken);
-            }
+            // foreach (var entityType in _model.GetEntityTypes())
+            // {
+            //     created |= await _CouchbaseClient.CreateContainerIfNotExistsAsync(entityType.Couchbase().ContainerName, "__partitionKey", cancellationToken);
+            // }
 
             if (created)
             {
