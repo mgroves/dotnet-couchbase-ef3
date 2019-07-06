@@ -122,10 +122,10 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Expressions.Internal
             [NotNull] Expression arguments)
             => _querySqlGeneratorFactory.CreateFromSql(this, sql, arguments);
 
-        public CouchbaseSqlQuery ToSqlQuery(IReadOnlyDictionary<string, object> parameterValues)
-            => CreateDefaultQuerySqlGenerator().GenerateSqlQuery(parameterValues);
+        public CouchbaseSqlQuery ToSqlQuery(string bucketName, IReadOnlyDictionary<string, object> parameterValues)
+            => CreateDefaultQuerySqlGenerator().GenerateSqlQuery(bucketName, parameterValues);
 
         public override string ToString()
-            => ToSqlQuery(new Dictionary<string, object>()).Query;
+            => ToSqlQuery("bucket", new Dictionary<string, object>()).Query;
     }
 }

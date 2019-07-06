@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Utilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -26,6 +27,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Sql.Internal
         private CoreTypeMapping _typeMapping;
 
         private readonly StringBuilder _sqlBuilder = new StringBuilder();
+        private string _bucketName;
         private IReadOnlyDictionary<string, object> _parameterValues;
         private List<SqlParameter> _sqlParameters;
 
@@ -73,9 +75,14 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Sql.Internal
         }
 
         public CouchbaseSqlQuery GenerateSqlQuery(
+            string bucketName,
             IReadOnlyDictionary<string, object> parameterValues)
         {
+            Check.NotNull(bucketName, nameof(bucketName));
+            Check.NotNull(parameterValues, nameof(parameterValues));
+
             _sqlBuilder.Clear();
+            _bucketName = bucketName;
             _parameterValues = parameterValues;
             _sqlParameters = new List<SqlParameter>();
 
@@ -210,7 +217,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Sql.Internal
                     Visit(selectExpression.Projection);
                     _sqlBuilder.AppendLine();
 
-                    _sqlBuilder.Append("FROM root ");
+                    _sqlBuilder.AppendFormat("FROM {0} ", _bucketName);
                     Visit(selectExpression.FromExpression);
                     _sqlBuilder.AppendLine();
 

@@ -35,9 +35,10 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
         public static readonly JsonSerializer Serializer = new JsonSerializer();
         private ClientConfiguration _clientConfiguration;
         private IAuthenticator _authenticator;
-        private string _bucketName;
         private IBucket _bucket;
         private Cluster _cluster;
+
+        public string BucketName { get; }
 
         static CouchbaseClientWrapper()
         {
@@ -54,7 +55,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
 
             _clientConfiguration = options.ClientConfiguration;
             _authenticator = options.Authenticator;
-            _bucketName = options.BucketName;
+            BucketName = options.BucketName;
 
             _executionStrategyFactory = executionStrategyFactory;
             _commandLogger = commandLogger;
@@ -77,7 +78,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
 
         private IBucket ConnectToCouchbaseBucket()
         {
-            return Cluster.OpenBucket(_bucketName);
+            return Cluster.OpenBucket(BucketName);
         }
 
         public bool CreateDatabaseIfNotExists()
@@ -332,18 +333,18 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                 private readonly CouchbaseClientWrapper _CouchbaseClient;
                 private readonly string _containerId;
                 private readonly CouchbaseSqlQuery _CouchbaseSqlQuery;
-        
+
                 public Enumerator(DocumentEnumerable documentEnumerable)
                 {
                     _CouchbaseClient = documentEnumerable._CouchbaseClient;
                     _containerId = documentEnumerable._containerId;
                     _CouchbaseSqlQuery = documentEnumerable._CouchbaseSqlQuery;
                 }
-        
+
                 public JObject Current { get; private set; }
-        
+
                 object IEnumerator.Current => Current;
-        
+
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public bool MoveNext()
                 {
@@ -355,17 +356,17 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                         {
                             _query = _CouchbaseClient.CreateQuery(_containerId, _CouchbaseSqlQuery);
                         }
-        
+
                         if (!_query.HasMoreResults)
                         {
                             Current = default;
                             return false;
                         }
-        
+
                         _responseStream = _query.FetchNextSetAsync().GetAwaiter().GetResult().Content;
                         _reader = new StreamReader(_responseStream);
                         _jsonReader = new JsonTextReader(_reader);
-        
+
                         while (_jsonReader.Read())
                         {
                             if (_jsonReader.TokenType == JsonToken.StartObject)
@@ -379,11 +380,11 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                                 }
                             }
                         }
-        
+
                         ObjectFound:
                         ;
                     }
-        
+
                     while (_jsonReader.Read())
                     {
                         if (_jsonReader.TokenType == JsonToken.StartObject)
@@ -398,18 +399,18 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                             }
                         }
                     }
-        
+
                     _jsonReader.Close();
                     _jsonReader = null;
                     _reader.Dispose();
                     _reader = null;
                     _responseStream.Dispose();
                     _responseStream = null;
-        
+
                     return MoveNext();
                     */
                 }
-        
+
                 public void Dispose()
                 {
                     _jsonReader?.Close();
@@ -419,7 +420,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                     _responseStream?.Dispose();
                     _responseStream = null;
                 }
-        
+
                 public void Reset() => throw new NotImplementedException();
             }
         }
