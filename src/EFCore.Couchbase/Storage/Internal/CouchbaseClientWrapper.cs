@@ -35,9 +35,10 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
         public static readonly JsonSerializer Serializer = new JsonSerializer();
         private ClientConfiguration _clientConfiguration;
         private IAuthenticator _authenticator;
-        private string _bucketName;
         private IBucket _bucket;
         private Cluster _cluster;
+
+        public string BucketName { get; }
 
         static CouchbaseClientWrapper()
         {
@@ -54,7 +55,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
 
             _clientConfiguration = options.ClientConfiguration;
             _authenticator = options.Authenticator;
-            _bucketName = options.BucketName;
+            BucketName = options.BucketName;
 
             _executionStrategyFactory = executionStrategyFactory;
             _commandLogger = commandLogger;
@@ -77,7 +78,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
 
         private IBucket ConnectToCouchbaseBucket()
         {
-            return Cluster.OpenBucket(_bucketName);
+            return Cluster.OpenBucket(BucketName);
         }
 
         public bool CreateDatabaseIfNotExists()

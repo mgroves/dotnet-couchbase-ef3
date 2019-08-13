@@ -44,7 +44,9 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Expressions.Internal
             SelectExpression selectExpression)
             => ((CouchbaseQueryContext)queryContext).CouchbaseClient.ExecuteSqlQuery(
                 collectionId,
-                selectExpression.ToSqlQuery(queryContext.ParameterValues));
+                selectExpression.ToSqlQuery(
+                    ((CouchbaseQueryContext)queryContext).CouchbaseClient.BucketName,
+                    queryContext.ParameterValues));
 
         private static readonly MethodInfo _queryAsyncMethodInfo
             = typeof(DocumentQueryExpression).GetTypeInfo().GetDeclaredMethod(nameof(_QueryAsync));
@@ -56,7 +58,9 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Expressions.Internal
             SelectExpression selectExpression)
             => ((CouchbaseQueryContext)queryContext).CouchbaseClient.ExecuteSqlQueryAsync(
                 collectionId,
-                selectExpression.ToSqlQuery(queryContext.ParameterValues));
+                selectExpression.ToSqlQuery(
+                    ((CouchbaseQueryContext)queryContext).CouchbaseClient.BucketName,
+                    queryContext.ParameterValues));
 
         protected override Expression VisitChildren(ExpressionVisitor visitor) => this;
 
