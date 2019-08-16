@@ -15,6 +15,7 @@ using Couchbase;
 using Couchbase.Authentication;
 using Couchbase.Configuration.Client;
 using Couchbase.Core;
+using Couchbase.N1QL;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Couchbase.Infrastructure.Internal;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -105,15 +106,15 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             var info = await manager.ClusterInfoAsync();
             if (!info.Success)
             {
-                throw new Exception($"Error checking for existing bucket {_bucketName}", info.Exception);
+                throw new Exception($"Error checking for existing bucket {BucketName}", info.Exception);
             }
 
-            if (info.Value.BucketConfigs().All(p => p.Name != _bucketName))
+            if (info.Value.BucketConfigs().All(p => p.Name != BucketName))
             {
-                var createResult = await manager.CreateBucketAsync(_bucketName);
+                var createResult = await manager.CreateBucketAsync(BucketName);
                 if (!createResult.Success)
                 {
-                    throw new Exception($"Error creating bucket {_bucketName}", info.Exception);
+                    throw new Exception($"Error creating bucket {BucketName}", info.Exception);
                 }
 
                 return true;
@@ -290,8 +291,6 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             string containerId,
             [NotNull] CouchbaseSqlQuery query)
         {
-            _commandLogger.ExecutingSqlQuery(query);
-
             return new DocumentEnumerable(this, containerId, query);
         }
 
@@ -299,39 +298,42 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
             string containerId,
             [NotNull] CouchbaseSqlQuery query)
         {
-            _commandLogger.ExecutingSqlQuery(query);
-
             return new DocumentAsyncEnumerable(this, containerId, query);
         }
 
-        // private CouchbaseResultSetIterator CreateQuery(
-        //     string containerId,
-        //     CouchbaseSqlQuery query)
-        // {
-        //     var items = Client.Databases[_databaseId].Containers[containerId].Items;
-        //     var queryDefinition = new CouchbaseSqlQueryDefinition(query.Query);
-        //     foreach (var parameter in query.Parameters)
-        //     {
-        //         queryDefinition.UseParameter(parameter.Name, parameter.Value);
-        //     }
-        //
-        //     return items.CreateItemQueryAsStream(queryDefinition, "0");
-        // }
+        private IQueryRequest CreateQuery(
+            string containerId,
+            CouchbaseSqlQuery query)
+        {
+            var queryText = query.Query;
+
+            _commandLogger.ExecutingSqlQuery(query);
+
+            var request = new QueryRequest(queryText)
+                .UseStreaming(true);
+
+            foreach (var parameter in query.Parameters)
+            {
+                request.AddNamedParameter(parameter.Name, parameter.Value);
+            }
+
+            return request;
+        }
 
         private class DocumentEnumerable : IEnumerable<JObject>
         {
-            private readonly CouchbaseClientWrapper _CouchbaseClient;
+            private readonly CouchbaseClientWrapper _couchbaseClient;
             private readonly string _containerId;
-            private readonly CouchbaseSqlQuery _CouchbaseSqlQuery;
+            private readonly CouchbaseSqlQuery _couchbaseSqlQuery;
 
             public DocumentEnumerable(
-                CouchbaseClientWrapper CouchbaseClient,
+                CouchbaseClientWrapper couchbaseClient,
                 string containerId,
-                CouchbaseSqlQuery CouchbaseSqlQuery)
+                CouchbaseSqlQuery couchbaseSqlQuery)
             {
-                _CouchbaseClient = CouchbaseClient;
+                _couchbaseClient = couchbaseClient;
                 _containerId = containerId;
-                _CouchbaseSqlQuery = CouchbaseSqlQuery;
+                _couchbaseSqlQuery = couchbaseSqlQuery;
             }
 
             public IEnumerator<JObject> GetEnumerator() => new Enumerator(this);
@@ -340,19 +342,17 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
 
             private class Enumerator : IEnumerator<JObject>
             {
-//                private CouchbaseResultSetIterator _query;
-                private Stream _responseStream;
-                private StreamReader _reader;
-                private JsonTextReader _jsonReader;
-                private readonly CouchbaseClientWrapper _CouchbaseClient;
+                private IQueryResult<JObject> _queryResult;
+                private IEnumerator<JObject> _resultEnumerator;
+                private readonly CouchbaseClientWrapper _couchbaseClient;
                 private readonly string _containerId;
-                private readonly CouchbaseSqlQuery _CouchbaseSqlQuery;
+                private readonly CouchbaseSqlQuery _couchbaseSqlQuery;
 
                 public Enumerator(DocumentEnumerable documentEnumerable)
                 {
-                    _CouchbaseClient = documentEnumerable._CouchbaseClient;
+                    _couchbaseClient = documentEnumerable._couchbaseClient;
                     _containerId = documentEnumerable._containerId;
-                    _CouchbaseSqlQuery = documentEnumerable._CouchbaseSqlQuery;
+                    _couchbaseSqlQuery = documentEnumerable._couchbaseSqlQuery;
                 }
 
                 public JObject Current { get; private set; }
@@ -362,77 +362,34 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public bool MoveNext()
                 {
-                    throw new NotImplementedException("CouchbaseClientWrapper::Enumerator::MoveNext");
-                    /*
-                    if (_jsonReader == null)
+                    if (_queryResult == null)
                     {
-                        if (_query == null)
-                        {
-                            _query = _CouchbaseClient.CreateQuery(_containerId, _CouchbaseSqlQuery);
-                        }
+                        var query = _couchbaseClient.CreateQuery(_containerId, _couchbaseSqlQuery);
 
-                        if (!_query.HasMoreResults)
-                        {
-                            Current = default;
-                            return false;
-                        }
+                        _queryResult = _couchbaseClient.Bucket.Query<JObject>(query);
+                        _queryResult.EnsureSuccess();
 
-                        _responseStream = _query.FetchNextSetAsync().GetAwaiter().GetResult().Content;
-                        _reader = new StreamReader(_responseStream);
-                        _jsonReader = new JsonTextReader(_reader);
-
-                        while (_jsonReader.Read())
-                        {
-                            if (_jsonReader.TokenType == JsonToken.StartObject)
-                            {
-                                while (_jsonReader.Read())
-                                {
-                                    if (_jsonReader.TokenType == JsonToken.StartArray)
-                                    {
-                                        goto ObjectFound;
-                                    }
-                                }
-                            }
-                        }
-
-                        ObjectFound:
-                        ;
+                        _resultEnumerator = _queryResult.GetEnumerator();
                     }
 
-                    while (_jsonReader.Read())
+                    var returnValue = _resultEnumerator.MoveNext();
+                    Current = _resultEnumerator.Current;
+
+                    if (!returnValue)
                     {
-                        if (_jsonReader.TokenType == JsonToken.StartObject)
-                        {
-                            while (_jsonReader.Read())
-                            {
-                                if (_jsonReader.TokenType == JsonToken.StartObject)
-                                {
-                                    Current = new JsonSerializer().Deserialize<JObject>(_jsonReader);
-                                    return true;
-                                }
-                            }
-                        }
+                        // Check for additional errors after the rows are returned
+                        _queryResult.EnsureSuccess();
                     }
 
-                    _jsonReader.Close();
-                    _jsonReader = null;
-                    _reader.Dispose();
-                    _reader = null;
-                    _responseStream.Dispose();
-                    _responseStream = null;
-
-                    return MoveNext();
-                    */
+                    return returnValue;
                 }
 
                 public void Dispose()
                 {
-                    _jsonReader?.Close();
-                    _jsonReader = null;
-                    _reader?.Dispose();
-                    _reader = null;
-                    _responseStream?.Dispose();
-                    _responseStream = null;
+                    _resultEnumerator?.Dispose();
+                    _resultEnumerator = null;
+                    _queryResult?.Dispose();
+                    _queryResult = null;
                 }
 
                 public void Reset() => throw new NotImplementedException();
@@ -441,37 +398,35 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
 
         private class DocumentAsyncEnumerable : IAsyncEnumerable<JObject>
         {
-            private readonly CouchbaseClientWrapper _CouchbaseClient;
+            private readonly CouchbaseClientWrapper _couchbaseClient;
             private readonly string _containerId;
-            private readonly CouchbaseSqlQuery _CouchbaseSqlQuery;
+            private readonly CouchbaseSqlQuery _couchbaseSqlQuery;
 
             public DocumentAsyncEnumerable(
-                CouchbaseClientWrapper CouchbaseClient,
+                CouchbaseClientWrapper couchbaseClient,
                 string containerId,
-                CouchbaseSqlQuery CouchbaseSqlQuery)
+                CouchbaseSqlQuery couchbaseSqlQuery)
             {
-                _CouchbaseClient = CouchbaseClient;
+                _couchbaseClient = couchbaseClient;
                 _containerId = containerId;
-                _CouchbaseSqlQuery = CouchbaseSqlQuery;
+                _couchbaseSqlQuery = couchbaseSqlQuery;
             }
 
             public IAsyncEnumerator<JObject> GetEnumerator() => new AsyncEnumerator(this);
 
             private class AsyncEnumerator : IAsyncEnumerator<JObject>
             {
-//                private CouchbaseResultSetIterator _query;
-                private Stream _responseStream;
-                private StreamReader _reader;
-                private JsonTextReader _jsonReader;
-                private readonly CouchbaseClientWrapper _CouchbaseClient;
+                private IQueryResult<JObject> _queryResult;
+                private IAsyncEnumerator<JObject> _resultEnumerator;
+                private readonly CouchbaseClientWrapper _couchbaseClient;
                 private readonly string _containerId;
-                private readonly CouchbaseSqlQuery _CouchbaseSqlQuery;
+                private readonly CouchbaseSqlQuery _couchbaseSqlQuery;
 
                 public AsyncEnumerator(DocumentAsyncEnumerable documentEnumerable)
                 {
-                    _CouchbaseClient = documentEnumerable._CouchbaseClient;
+                    _couchbaseClient = documentEnumerable._couchbaseClient;
                     _containerId = documentEnumerable._containerId;
-                    _CouchbaseSqlQuery = documentEnumerable._CouchbaseSqlQuery;
+                    _couchbaseSqlQuery = documentEnumerable._couchbaseSqlQuery;
                 }
 
                 public JObject Current { get; private set; }
@@ -479,77 +434,41 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Storage.Internal
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public async Task<bool> MoveNext(CancellationToken cancellationToken)
                 {
-                    return await Task.FromException<bool>(new NotImplementedException("CouchbaseClientWrapper::AsyncEnumerator::MoveNext"));
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    // cancellationToken.ThrowIfCancellationRequested();
-                    //
-                    // if (_jsonReader == null)
-                    // {
-                    //     if (_query == null)
-                    //     {
-                    //         _query = _CouchbaseClient.CreateQuery(_containerId, _CouchbaseSqlQuery);
-                    //     }
-                    //
-                    //     if (!_query.HasMoreResults)
-                    //     {
-                    //         Current = default;
-                    //         return false;
-                    //     }
-                    //
-                    //     _responseStream = (await _query.FetchNextSetAsync(cancellationToken)).Content;
-                    //     _reader = new StreamReader(_responseStream);
-                    //     _jsonReader = new JsonTextReader(_reader);
-                    //
-                    //     while (_jsonReader.Read())
-                    //     {
-                    //         if (_jsonReader.TokenType == JsonToken.StartObject)
-                    //         {
-                    //             while (_jsonReader.Read())
-                    //             {
-                    //                 if (_jsonReader.TokenType == JsonToken.StartArray)
-                    //                 {
-                    //                     goto ObjectFound;
-                    //                 }
-                    //             }
-                    //         }
-                    //     }
-                    //
-                    //     ObjectFound:
-                    //     ;
-                    // }
-                    //
-                    // while (_jsonReader.Read())
-                    // {
-                    //     if (_jsonReader.TokenType == JsonToken.StartObject)
-                    //     {
-                    //         while (_jsonReader.Read())
-                    //         {
-                    //             if (_jsonReader.TokenType == JsonToken.StartObject)
-                    //             {
-                    //                 Current = new JsonSerializer().Deserialize<JObject>(_jsonReader);
-                    //                 return true;
-                    //             }
-                    //         }
-                    //     }
-                    // }
-                    //
-                    // _jsonReader.Close();
-                    // _jsonReader = null;
-                    // _reader.Dispose();
-                    // _reader = null;
-                    // _responseStream.Dispose();
-                    // _responseStream = null;
-                    // return await MoveNext(cancellationToken);
+                    if (_queryResult == null)
+                    {
+                        var query = _couchbaseClient.CreateQuery(_containerId, _couchbaseSqlQuery);
+
+                        _queryResult = await _couchbaseClient.Bucket.QueryAsync<JObject>(query, cancellationToken);
+                        _queryResult.EnsureSuccess();
+
+                        // TODO: Use IAsyncEnumerable directly once Couchbase SDK support is available https://issues.couchbase.com/browse/NCBC-2020
+                        _resultEnumerator = _queryResult.ToAsyncEnumerable().GetEnumerator();
+                    }
+
+                    var returnValue = await _resultEnumerator.MoveNext(cancellationToken);
+                    if (returnValue)
+                    {
+                        Current = _resultEnumerator.Current;
+                    }
+                    else
+                    {
+                        Current = null;
+
+                        // Check for additional errors after the rows are returned
+                        _queryResult.EnsureSuccess();
+                    }
+
+                    return returnValue;
                 }
 
                 public void Dispose()
                 {
-                    _jsonReader?.Close();
-                    _jsonReader = null;
-                    _reader?.Dispose();
-                    _reader = null;
-                    _responseStream?.Dispose();
-                    _responseStream = null;
+                    _resultEnumerator?.Dispose();
+                    _resultEnumerator = null;
+                    _queryResult?.Dispose();
+                    _queryResult = null;
                 }
 
                 public void Reset() => throw new NotImplementedException();

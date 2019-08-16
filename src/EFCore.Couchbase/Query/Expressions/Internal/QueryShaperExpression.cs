@@ -56,7 +56,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Expressions.Internal
         {
             foreach (var jObject in innerEnumerable)
             {
-                yield return shaper(jObject);
+                yield return shaper((JObject) jObject.GetValue("c"));
             }
         }
 
@@ -104,7 +104,7 @@ namespace Microsoft.EntityFrameworkCore.Couchbase.Query.Expressions.Internal
                         return false;
                     }
 
-                    Current = _shaper(_enumerator.Current);
+                    Current = _shaper((JObject) _enumerator.Current?.GetValue("c"));
                     return true;
                 }
 
